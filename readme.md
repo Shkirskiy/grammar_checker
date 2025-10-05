@@ -10,6 +10,7 @@ A Telegram bot that checks and corrects grammar with AI-powered fluency improvem
 - **🎨 Multiple Fluency Styles** - Current, Formal, Friendly, and Scientific styles
 - **🔍 Change Explanation** - Detailed explanations of corrections made
 - **🔄 Reformulation** - Generate multiple variations of improved text
+- **✉️ Email Subject Suggestions** - Generate subject lines in 3 styles (Short, Formal, Catchy)
 - **🔒 User Authorization** - Controlled access with user limit management
 - **📊 Admin Dashboard** - Usage statistics and user management
 
@@ -26,8 +27,8 @@ A Telegram bot that checks and corrects grammar with AI-powered fluency improvem
 
 1. Clone and navigate to the repository:
    ```bash
-   git clone https://github.com/yourusername/grammar_check_bot_v2.git
-   cd grammar_check_bot_v2
+   git clone https://github.com/Shkirskiy/grammar_checker.git
+   cd grammar_checker
    ```
 
 2. Install dependencies:
@@ -62,32 +63,42 @@ Send any text message to the bot for grammar checking. After correction:
   - 😊 Friendly Style
   - 🔬 Scientific Style
 - **🔄 Reformulate** - Generate alternative phrasings
+- **✉️ Email Subjects** - Use `/subject` to generate 3 subject line options
 
 ### Commands
 
 - `/start` - Start the bot
 - `/help` - Show help message
+- `/subject` - Generate email subject suggestions (Short, Formal, Catchy)
 - `/admin_stats` - View statistics (admin only)
 
 ## 📁 Project Structure
 
 ```
-grammar_check_bot_v2/
+grammar_checker/
 ├── bot.py                      # Main bot application
-├── user_manager.py             # User authorization
-├── message_handler.py          # Message processing
 ├── config.py                   # Configuration loader
+├── message_handler.py          # Message processing & splitting
+├── user_manager.py             # User authorization
 ├── requirements.txt            # Python dependencies
 ├── .env                        # Environment variables (not in git)
 ├── .env.example                # Environment template
+├── .gitignore                  # Git exclusions
+├── logo.png                    # Bot logo
+├── users_data.json             # User data storage (auto-generated)
 └── system_prompts/             # LLM prompts
     ├── grammar_correction.txt
     ├── change_explanation.txt
     ├── fluency_current.txt
     ├── fluency_formal.txt
     ├── fluency_friendly.txt
-    └── fluency_scientific.txt
+    ├── fluency_scientific.txt
+    ├── email_subject_short.txt
+    ├── email_subject_formal.txt
+    └── email_subject_catchy.txt
 ```
+
+**Note:** Auto-launch setup files (`.sh`, `.scpt`, `.app`) are excluded from git as they are machine-specific.
 
 ## 🔒 Security & Privacy
 
