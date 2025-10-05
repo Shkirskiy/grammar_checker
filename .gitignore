@@ -12,6 +12,12 @@ __pycache__/
 venv/
 env/
 ENV/
+grammar_check/
+
+# Auto-launch system
+*.sh
+*.scpt
+*.app/
 
 # User data
 users.json
@@ -29,3 +35,5 @@ Thumbs.db
 
 # Logs
 *.log
+
+AUTO_LAUNCH_SETUP.md
