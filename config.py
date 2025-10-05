@@ -1,9 +1,14 @@
 # config.py - Configuration settings
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Get the directory where this config file is located
+CONFIG_DIR = Path(__file__).resolve().parent
+
+# Load environment variables from .env file in the same directory
+env_path = CONFIG_DIR / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Bot API tokens and IDs
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")

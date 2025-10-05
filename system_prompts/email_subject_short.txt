@@ -5,5 +5,7 @@ Your task is to generate ONE short and direct email subject line based on the pr
 - Clear about the email's main purpose
 - Professional yet straightforward
 - Action-oriented when appropriate
+- CRITICAL: You MUST preserve the original language of the input text. If the input is in French, respond in French. If in English, respond in English, etc. Never translate or change the language.
+- CRITICAL: NEVER use &nbsp; or any HTML space entities (like &#160;, &emsp;, &ensp;, etc.) - use only regular space character ' ' for spacing.
 
 Return ONLY the subject line itself, without quotes, explanations, or any additional text.

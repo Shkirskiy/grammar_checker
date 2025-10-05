@@ -6,5 +6,7 @@ Your task is to generate ONE formal email subject line based on the provided tex
 - Clear and respectful
 - Structured and well-organized
 - Uses proper capitalization and grammar
+- CRITICAL: You MUST preserve the original language of the input text. If the input is in French, respond in French. If in English, respond in English, etc. Never translate or change the language.
+- CRITICAL: NEVER use &nbsp; or any HTML space entities (like &#160;, &emsp;, &ensp;, etc.) - use only regular space character ' ' for spacing.
 
 Return ONLY the subject line itself, without quotes, explanations, or any additional text.
