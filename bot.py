@@ -129,8 +129,10 @@ class GrammarBot:
             "• ✅ Check and correct grammar\n"
             "• 🎨 Improve fluency with multiple styles\n"
             "• 🔍 Explain what was changed\n"
-            "• 🔄 Generate alternative phrasings\n\n"
+            "• 🔄 Generate alternative phrasings\n"
+            "• ✉️ Generate email subject suggestions\n\n"
             "Just send me any text and I'll take care of the rest!\n\n"
+            f"📏 <b>Message limit:</b> {MAX_MESSAGE_LENGTH} characters\n\n"
             "💡 Type /help for detailed instructions\n"
             f"🔗 <a href='{GITHUB_REPO_URL}'>GitHub Repository</a>"
         )
@@ -162,21 +164,19 @@ class GrammarBot:
             "📖 <b>Grammar Correction Bot - Help</b>\n\n"
             "⚙️ <b>Commands:</b>\n"
             "/start - Welcome message\n"
-            "/help - Show this help message\n\n"
+            "/help - Show this help message\n"
+            "/subject - Generate email subject suggestions\n\n"
             "📝 <b>How to use:</b>\n"
             "1️⃣ Send any text message to check grammar\n"
             "2️⃣ After correction, you can:\n"
-            "   • 🔍 <b>Explain Changes</b> - See what was modified\n"
-            "   • ✨ <b>Improve Fluency</b> - Choose a style:\n"
-            "      - 🔄 Current Style - Maintain original style\n"
-            "      - 🎩 Formal Style - Professional tone\n"
-            "      - 😊 Friendly Style - Casual and warm\n"
-            "      - 🔬 Scientific Style - Academic tone\n"
-            "   • 🔄 <b>Reformulate</b> - Generate alternatives\n\n"
+            "   • 🔍 <b>Explain Changes</b>\n"
+            "   • ✨ <b>Improve Fluency</b> - Current, Formal, Friendly, Scientific\n"
+            "   • 🔄 <b>Reformulate</b>\n"
+            "3️⃣ Use /subject to generate 3 email subject options\n\n"
             "💡 <b>Tips:</b>\n"
             "• Corrected text is copyable (tap and hold)\n"
             "• Navigate between reformulations with ◄ ►\n"
-            f"• View source code: <a href='{GITHUB_REPO_URL}'>GitHub</a>"
+            f"• Message limit: {MAX_MESSAGE_LENGTH} characters"
         )
         
         if self.user_manager.is_admin(user_id):
@@ -184,6 +184,111 @@ class GrammarBot:
             help_text += "/admin_stats - View bot usage statistics"
         
         await update.message.reply_html(help_text)
+    
+    async def subject(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /subject command - Generate email subject suggestions"""
+        user_id = update.effective_user.id
+        
+        # Check if user is authorized
+        if self.user_manager.is_authorized(user_id):
+            self.user_manager.update_last_activity(user_id)
+        elif self.user_manager.can_accept_new_user():
+            # Add new user
+            self.user_manager.add_user(
+                user_id=user_id,
+                username=update.effective_user.username,
+                first_name=update.effective_user.first_name
+            )
+        else:
+            # User limit reached
+            await update.message.reply_html(
+                "⚠️ <b>User limit exceeded</b>\n\n"
+                "This bot has reached its maximum capacity. "
+                "Please wait until the administrator extends the user limit."
+            )
+            return
+        
+        # Find the most recent corrected message for this user
+        user_data_keys = [key for key in self.conversation_data.keys() if key.startswith("message_")]
+        
+        if not user_data_keys:
+            await update.message.reply_html(
+                "📧 <b>Email Subject Generator</b>\n\n"
+                "Please send a message to correct first. Once I've corrected your text, "
+                "you can use /subject to generate email subject line suggestions.\n\n"
+                "💡 I'll analyze your corrected text and provide 3 options:\n"
+                "• Short & Direct\n"
+                "• Formal & Professional\n"
+                "• Catchy & Playful"
+            )
+            return
+        
+        # Get the most recent message data (last key in dictionary)
+        latest_key = user_data_keys[-1]
+        conv_data = self.conversation_data.get(latest_key, {})
+        
+        # Determine which text to use
+        fluency_versions = conv_data.get("fluency_versions", [])
+        if fluency_versions:
+            # Use the latest fluency-improved version
+            text_to_analyze = fluency_versions[-1]
+            # Remove HTML tags
+            text_to_analyze = re.sub(r'<[^<]+?>', '', text_to_analyze)
+        else:
+            # Use the original corrected text
+            text_to_analyze = conv_data.get("corrected", "")
+            # Remove HTML tags
+            text_to_analyze = re.sub(r'<[^<]+?>', '', text_to_analyze)
+        
+        if not text_to_analyze:
+            await update.message.reply_html(
+                "❌ Could not find your corrected text. Please send a message to correct first."
+            )
+            return
+        
+        # Send typing action
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+        
+        try:
+            # Generate all 3 subject line styles
+            short_subject, tokens_short = await self.send_to_llm(
+                text_to_analyze,
+                self.prompts['email_subject_short']
+            )
+            
+            formal_subject, tokens_formal = await self.send_to_llm(
+                text_to_analyze,
+                self.prompts['email_subject_formal']
+            )
+            
+            catchy_subject, tokens_catchy = await self.send_to_llm(
+                text_to_analyze,
+                self.prompts['email_subject_catchy']
+            )
+            
+            # Update user's token count for all 3 calls
+            total_tokens = tokens_short + tokens_formal + tokens_catchy
+            self.user_manager.update_tokens(user_id, total_tokens)
+            
+            # Format the response with 3 separate copyable blocks
+            response = "📧 <b>Email Subject Suggestions</b>\n\n"
+            
+            response += "📌 <b>Short & Direct:</b>\n"
+            response += f"<pre>{html.escape(short_subject.strip())}</pre>\n\n"
+            
+            response += "🎩 <b>Formal & Professional:</b>\n"
+            response += f"<pre>{html.escape(formal_subject.strip())}</pre>\n\n"
+            
+            response += "✨ <b>Catchy & Playful:</b>\n"
+            response += f"<pre>{html.escape(catchy_subject.strip())}</pre>"
+            
+            await update.message.reply_html(response)
+            
+        except Exception as e:
+            logger.error(f"Error in subject command: {e}")
+            await update.message.reply_html(
+                f"Sorry, an error occurred while generating email subjects: {str(e)}"
+            )
     
     async def admin_stats(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /admin_stats command - only for admin"""
@@ -740,6 +845,7 @@ def main():
     # Add command handlers
     application.add_handler(CommandHandler("start", bot.start))
     application.add_handler(CommandHandler("help", bot.help))
+    application.add_handler(CommandHandler("subject", bot.subject))
     application.add_handler(CommandHandler("admin_stats", bot.admin_stats))
     
     # Add message handler
